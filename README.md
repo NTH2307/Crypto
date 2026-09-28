@@ -64,6 +64,31 @@ Numero de trades: 14
 Win rate:        57.14%
 ```
 
+### Validação (comparação com buy-and-hold em vários pares/períodos)
+
+Um único backtest não prova que a estratégia é boa — pode ter sido sorte do
+período. O comando `validate` corre a mesma estratégia sobre vários pares e
+vários períodos, e compara sempre com "buy and hold" (comprar no início e
+segurar até ao fim), que é a referência mínima que uma estratégia ativa tem
+de bater para justificar a complexidade extra.
+
+```bash
+python -m paperbot validate \
+    --symbols BTC/USDT,ETH/USDT,SOL/USDT \
+    --days-list 90,180,365 \
+    --timeframe 1h
+```
+
+Para cada combinação par/período mostra o retorno da estratégia, o retorno
+de buy-and-hold, se bateu ou não, drawdown máximo, Sharpe ratio anualizado,
+profit factor, número de trades e win rate, terminando com um resumo de em
+quantos testes a estratégia bateu buy-and-hold.
+
+Isto ainda **não é prova de lucro futuro** — é só um filtro melhor do que
+olhar para um único número. Uma estratégia que só bate buy-and-hold num
+período específico, mas não nos outros, está provavelmente sobreajustada
+(overfitted) a esse período.
+
 ### Live (simulado, sem dinheiro real)
 
 ```bash
