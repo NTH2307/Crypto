@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}crypto-paper-trader{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="brand">crypto-paper-trader</span>
+      <nav>
+        <a href="{{ url_for('index') }}">Preços</a>
+        <a href="{{ url_for('dca') }}">DCA vs Lump Sum</a>
+      </nav>
+    </div>
+  </header>
+  <main class="page">
+    <div class="banner">
+      <strong>Aviso:</strong> ferramenta de simulação e aprendizagem. Não executa
+      ordens reais, não é aconselhamento financeiro, e desempenho passado não
+      garante qualquer resultado futuro.
+    </div>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

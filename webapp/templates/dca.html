@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}DCA vs Lump Sum — crypto-paper-trader{% endblock %}
+{% block content %}
+<h1>DCA vs Lump Sum</h1>
+<p class="muted">
+  Compara investir em parcelas iguais ao longo do tempo (DCA) com investir tudo
+  de uma vez no início (lump sum). Não esperes que o DCA "ganhe" sempre — o que
+  importa é a consistência entre vários pares/períodos, não um único resultado.
+</p>
+
+<form method="get" class="filter-row">
+  <label>Pares
+    <input type="text" name="symbols" value="{{ symbols_param }}">
+  </label>
+  <label>Dias
+    <input type="number" name="days" value="{{ days }}" min="2">
+  </label>
+  <label>Parcelas
+    <input type="number" name="installments" value="{{ installments }}" min="1">
+  </label>
+  <label>Capital
+    <input type="number" name="cash" value="{{ cash|int }}" min="1">
+  </label>
+  <button type="submit">Recalcular</button>
+</form>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Par</th>
+      <th>DCA</th>
+      <th>Lump sum</th>
+      <th>Bate LS</th>
+      <th>Max drawdown</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.symbol }}</td>
+      {% if r.error %}
+        <td colspan="4" class="error">{{ r.error }}</td>
+      {% else %}
+        <td class="tabular">{{ "%.2f"|format(r.dca_return_pct) }}%</td>
+        <td class="tabular">{{ "%.2f"|format(r.lump_sum_return_pct) }}%</td>
+        <td>{{ "SIM" if r.beats_lump_sum else "não" }}</td>
+        <td class="tabular">{{ "%.2f"|format(r.max_drawdown_pct) }}%</td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if chart_data %}
+<h2>Evolução do valor investido — {{ chart_data.symbol }}</h2>
+<div class="chart-wrap">
+  <canvas
+    id="equity-chart"
+    role="img"
+    aria-label="Gráfico de linhas comparando o valor da carteira DCA com lump sum ao longo do tempo para {{ chart_data.symbol }}"
+  ></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+  const labels = {{ chart_data.labels | tojson }};
+  const dcaValues = {{ chart_data.dca_values | tojson }};
+  const lumpSumValues = {{ chart_data.lump_sum_values | tojson }};
+  const ctx = document.getElementById('equity-chart');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'DCA',
+          data: dcaValues,
+          borderColor: '#2a78d6',
+          backgroundColor: 'rgba(42, 120, 214, 0.10)',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.15,
+        },
+        {
+          label: 'Lump sum',
+          data: lumpSumValues,
+          borderColor: '#eb6834',
+          backgroundColor: 'rgba(235, 104, 52, 0.10)',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.15,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, position: 'top', labels: { color: '#52514e' } },
+        tooltip: { mode: 'index', intersect: false },
+      },
+      scales: {
+        x: { grid: { color: '#e1e0d9' }, ticks: { color: '#898781' } },
+        y: { grid: { color: '#e1e0d9' }, ticks: { color: '#898781' } },
+      },
+    },
+  });
+</script>
+{% endif %}
+
+<p class="muted">
+  Baseado no que já validámos: a estratégia de DCA não bate sempre lump sum —
+  reduz o risco de investires tudo mesmo antes de uma queda, não maximiza o
+  retorno esperado. Usa a página de <a href="{{ url_for('dca') }}">DCA</a> com
+  vários pares e períodos antes de tirares conclusões.
+</p>
+{% endblock %}

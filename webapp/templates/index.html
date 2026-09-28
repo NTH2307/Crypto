@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Preços — crypto-paper-trader{% endblock %}
+{% block content %}
+<h1>Preços ao vivo</h1>
+<p class="muted">Dados públicos da {{ exchange }} (via ccxt), sem chaves de API. Atualiza ao recarregar a página.</p>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Par</th><th>Preço</th></tr>
+  </thead>
+  <tbody>
+    {% for t in tickers %}
+    <tr>
+      <td>{{ t.symbol }}</td>
+      {% if t.error %}
+        <td class="error" title="{{ t.error }}">indisponível</td>
+      {% else %}
+        <td class="tabular">{{ "%.2f"|format(t.price) }}</td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

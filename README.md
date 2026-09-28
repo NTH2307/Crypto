@@ -22,6 +22,8 @@ estratégia técnica e simula compras/vendas contra uma carteira virtual.
   um período específico.
 - **DCA**: simula investir um capital dividido em parcelas iguais ao longo
   do tempo, e compara com "lump sum" (investir tudo de uma vez).
+- **Dashboard web** (`webapp/`): página local com preços ao vivo e um gráfico
+  comparando DCA vs lump sum — ver secção própria abaixo.
 - **Live (simulado)**: corre em ciclo contínuo, busca o preço mais recente,
   aplica a estratégia técnica, e regista compras/vendas *simuladas* numa
   carteira virtual persistida em disco (`paperbot_state.json`). Nunca envia
@@ -183,6 +185,31 @@ Corre indefinidamente (`Ctrl+C` para parar), imprime o preço e o estado da
 carteira virtual a cada iteração, e guarda o estado em
 `paperbot_state.json` para poder retomar depois.
 
+## Dashboard web
+
+Uma página local (não publicada online) com duas vistas:
+
+- **Preços** (`/`) — preços ao vivo de alguns pares (BTC, ETH, SOL, BNB),
+  dados públicos via ccxt.
+- **DCA vs Lump Sum** (`/dca`) — tabela comparando DCA com lump sum em vários
+  pares, mais um gráfico da evolução do valor investido ao longo do tempo.
+  Os parâmetros (pares, dias, parcelas, capital) são ajustáveis no formulário
+  da própria página.
+
+Corre com:
+
+```bash
+python webapp/app.py
+```
+
+Depois abre `http://127.0.0.1:5000` no browser. Corre só na tua máquina —
+não é um serviço público nem guarda nada permanentemente.
+
+> Esta página **mostra dados de simulações e histórico de mercado**. Não
+> gera recomendações de "onde investir" nem qualquer tipo de sinal de
+> compra/venda automático — é uma visualização dos resultados que já
+> obténs pela linha de comandos, nada mais.
+
 ## Testes
 
 ```bash
@@ -202,7 +229,13 @@ paperbot/
   strategy.py    # lógica de sinais (compra/venda/hold)
   portfolio.py   # carteira virtual (cash, posição, trades)
   engine.py      # motor de backtest
+  dca.py         # simulação de DCA vs lump sum
+  validation.py  # buy-and-hold, Sharpe, profit factor
   cli.py         # interface de linha de comandos
+webapp/
+  app.py         # dashboard Flask local
+  templates/
+  static/
 tests/
 ```
 

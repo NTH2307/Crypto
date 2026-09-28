@@ -17,6 +17,7 @@ class DcaConfig:
 @dataclass
 class DcaResult:
     equity_curve: pd.Series
+    lump_sum_equity_curve: pd.Series
     total_invested: float
     total_units: float
     final_equity: float
@@ -73,9 +74,12 @@ def run_dca_backtest(ohlcv: pd.DataFrame, config: DcaConfig) -> DcaResult:
     lump_sum_units = (config.total_capital - lump_sum_fee) / first_price
     lump_sum_final_equity = lump_sum_units * last_price
     lump_sum_return_pct = (lump_sum_final_equity / config.total_capital - 1) * 100
+    lump_sum_equity_series = df["close"].astype(float) * lump_sum_units
+    lump_sum_equity_series.index = df["timestamp"]
 
     return DcaResult(
         equity_curve=equity_series,
+        lump_sum_equity_curve=lump_sum_equity_series,
         total_invested=total_invested,
         total_units=total_units,
         final_equity=final_equity,
