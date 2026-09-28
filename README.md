@@ -17,12 +17,34 @@ estratégia técnica e simula compras/vendas contra uma carteira virtual.
 - **Backtest**: descarrega histórico de candles (OHLCV) e simula a
   estratégia sobre esse período, devolvendo retorno total, drawdown máximo,
   número de trades e win rate.
+- **Validate**: compara a estratégia técnica com "buy and hold" em vários
+  pares e períodos, para detetar se o resultado é consistente ou só sorte de
+  um período específico.
+- **DCA**: simula investir um capital dividido em parcelas iguais ao longo
+  do tempo, e compara com "lump sum" (investir tudo de uma vez).
 - **Live (simulado)**: corre em ciclo contínuo, busca o preço mais recente,
-  aplica a mesma estratégia, e regista compras/vendas *simuladas* numa
+  aplica a estratégia técnica, e regista compras/vendas *simuladas* numa
   carteira virtual persistida em disco (`paperbot_state.json`). Nunca envia
   ordens à exchange.
 
-## Estratégia por omissão
+## Sobre a estratégia técnica vs. DCA
+
+A estratégia técnica (cruzamento de médias + RSI, abaixo) foi validada com o
+comando `validate` contra vários pares/períodos e **perdeu consistentemente**
+para "buy and hold" (só bateu em 2 de 9 testes, e mesmo nesses só porque
+perdeu menos numa queda de mercado, não por lucro real). Isto está de acordo
+com o que a literatura financeira mostra em geral: estratégias técnicas
+simples raramente batem buy-and-hold depois de fees, sobretudo em mercados
+com tendências fortes.
+
+Por isso, para quem quer algo mais simples e com melhor histórico de
+resultados, o comando `dca` (Dollar Cost Averaging — investir um valor fixo
+a intervalos regulares, sem tentar cronometrar o mercado) é a abordagem
+recomendada neste projeto. Não bate sempre "lump sum" (investir tudo já),
+mas reduz o risco de entrares com tudo mesmo antes de uma queda — é uma
+ferramenta de gestão de risco, não de tentar bater o mercado.
+
+## Estratégia técnica por omissão
 
 Cruzamento de médias móveis simples (SMA rápida vs. SMA lenta) filtrado por
 RSI, com stop-loss percentual:
@@ -45,7 +67,37 @@ pip install -r requirements.txt
 
 ## Uso
 
-### Backtest
+### DCA (recomendado)
+
+```bash
+python -m paperbot dca --symbol BTC/USDT --timeframe 1d --days 365 \
+    --cash 10000 --installments 12
+```
+
+Divide os 10000 em 12 parcelas espaçadas ao longo dos últimos 365 dias,
+compra a cada parcela ao preço de fecho desse dia, e compara o resultado
+final com teres investido os 10000 de uma vez só no primeiro dia (lump
+sum).
+
+Exemplo de saída:
+
+```
+Par: BTC/USDT  Timeframe: 1d  Periodo: 365 dias
+Capital total:           10000.00
+Parcelas:                12
+Custo medio por unidade: 61234.5678
+Valor final (DCA):       11820.44
+Retorno DCA:             18.20%
+Valor final (lump sum):  13500.12
+Retorno lump sum:        35.00%
+DCA bateu lump sum:      nao
+```
+
+Não é garantido que o DCA bata lump sum (normalmente não bate em mercados a
+subir de forma constante) — a vantagem do DCA é reduzir o risco de entrares
+com tudo mesmo antes de uma queda grande, não maximizar o retorno esperado.
+
+### Backtest (estratégia técnica)
 
 ```bash
 python -m paperbot backtest --symbol BTC/USDT --timeframe 1h --days 180 \

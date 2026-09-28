@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .config import StrategyConfig
 from .data import fetch_ohlcv
+from .dca import DcaConfig, run_dca_backtest
 from .engine import run_backtest
 from .portfolio import PaperPortfolio
 from .strategy import SmaCrossRsiStrategy
@@ -103,6 +104,31 @@ def cmd_validate(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_dca(args: argparse.Namespace) -> None:
+    ohlcv = fetch_ohlcv(args.exchange, args.symbol, args.timeframe, args.days)
+    if len(ohlcv) < args.installments:
+        print("Sem dados suficientes para este numero de parcelas neste periodo.")
+        return
+
+    config = DcaConfig(total_capital=args.cash, num_installments=args.installments, fee_rate=args.fee)
+    result = run_dca_backtest(ohlcv, config)
+
+    print(f"Par: {args.symbol}  Timeframe: {args.timeframe}  Periodo: {args.days} dias")
+    print(f"Capital total:           {config.total_capital:.2f}")
+    print(f"Parcelas:                {config.num_installments}")
+    print(f"Custo medio por unidade: {result.average_cost_basis:.4f}")
+    print(f"Valor final (DCA):       {result.final_equity:.2f}")
+    print(f"Retorno DCA:             {result.total_return_pct:.2f}%")
+    print(f"Valor final (lump sum):  {result.lump_sum_final_equity:.2f}")
+    print(f"Retorno lump sum:        {result.lump_sum_return_pct:.2f}%")
+    print(f"DCA bateu lump sum:      {'SIM' if result.beats_lump_sum else 'nao'}")
+    print(
+        "Nota: DCA costuma perder para lump sum quando o mercado sobe (investir tudo logo "
+        "aproveita mais a subida), mas reduz o risco de investires tudo mesmo antes de uma "
+        "queda. E uma decisao sobre gestao de risco, nao uma tentativa de bater o mercado."
+    )
+
+
 def cmd_live(args: argparse.Namespace) -> None:
     print("MODO SIMULACAO (paper trading) -- nenhuma ordem real e enviada a exchange.")
     state_path = Path(args.state_file)
@@ -167,17 +193,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--exchange", default="binance")
-    common.add_argument("--symbol", default="BTC/USDT")
-    common.add_argument("--timeframe", default="1h")
+    market_common = argparse.ArgumentParser(add_help=False)
+    market_common.add_argument("--exchange", default="binance")
+    market_common.add_argument("--symbol", default="BTC/USDT")
+    market_common.add_argument("--timeframe", default="1h")
+    market_common.add_argument("--cash", type=float, default=10_000.0)
+    market_common.add_argument("--fee", type=float, default=0.001)
+
+    common = argparse.ArgumentParser(add_help=False, parents=[market_common])
     common.add_argument("--fast", type=int, default=20)
     common.add_argument("--slow", type=int, default=50)
     common.add_argument("--rsi-period", type=int, default=14)
     common.add_argument("--rsi-overbought", type=float, default=70.0)
     common.add_argument("--stop-loss", type=float, default=0.05)
-    common.add_argument("--cash", type=float, default=10_000.0)
-    common.add_argument("--fee", type=float, default=0.001)
 
     backtest_parser = sub.add_parser("backtest", parents=[common], help="Corre um backtest historico.")
     backtest_parser.add_argument("--days", type=int, default=180)
@@ -195,6 +223,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--days-list", default="90,180,365", help="Lista de periodos (dias) separados por virgula."
     )
     validate_parser.set_defaults(func=cmd_validate)
+
+    dca_parser = sub.add_parser(
+        "dca",
+        parents=[market_common],
+        help="Backtest de DCA (investir em parcelas iguais) comparado com lump sum.",
+    )
+    dca_parser.add_argument("--days", type=int, default=365)
+    dca_parser.add_argument(
+        "--installments", type=int, default=12, help="Numero de parcelas em que o capital e dividido."
+    )
+    dca_parser.set_defaults(func=cmd_dca)
 
     live_parser = sub.add_parser(
         "live", parents=[common], help="Corre em loop, simulando trades em tempo real (sem dinheiro real)."
