@@ -47,6 +47,16 @@ def test_dca_applies_fees():
     assert result.total_return_pct < 0
 
 
+def test_dca_max_drawdown_is_negative_when_price_dips_between_buys():
+    # So ha compras no inicio e no fim; entre elas o preco sobe e depois cai,
+    # criando um drawdown na posicao ja aberta.
+    closes = [100.0, 100.0, 200.0, 100.0, 100.0]
+    ohlcv = _make_ohlcv(closes)
+    config = DcaConfig(total_capital=1200.0, num_installments=2, fee_rate=0.0)
+    result = run_dca_backtest(ohlcv, config)
+    assert result.max_drawdown_pct == pytest.approx(-50.0)
+
+
 def test_dca_raises_when_not_enough_candles():
     ohlcv = _make_ohlcv([100.0] * 3)
     config = DcaConfig(total_capital=1200.0, num_installments=12, fee_rate=0.0)

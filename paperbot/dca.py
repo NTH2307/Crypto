@@ -21,6 +21,7 @@ class DcaResult:
     total_units: float
     final_equity: float
     total_return_pct: float
+    max_drawdown_pct: float
     average_cost_basis: float
     lump_sum_final_equity: float
     lump_sum_return_pct: float
@@ -61,6 +62,11 @@ def run_dca_backtest(ohlcv: pd.DataFrame, config: DcaConfig) -> DcaResult:
     total_return_pct = (final_equity / total_invested - 1) * 100 if total_invested else 0.0
     average_cost_basis = (total_invested / total_units) if total_units else 0.0
 
+    running_max = equity_series.cummax()
+    running_max_safe = running_max.replace(0, float("nan"))
+    drawdown = (equity_series - running_max) / running_max_safe
+    max_drawdown_pct = float(drawdown.min() * 100) if not drawdown.dropna().empty else 0.0
+
     first_price = float(df.iloc[0]["close"])
     last_price = float(df.iloc[-1]["close"])
     lump_sum_fee = config.total_capital * config.fee_rate
@@ -74,6 +80,7 @@ def run_dca_backtest(ohlcv: pd.DataFrame, config: DcaConfig) -> DcaResult:
         total_units=total_units,
         final_equity=final_equity,
         total_return_pct=total_return_pct,
+        max_drawdown_pct=max_drawdown_pct,
         average_cost_basis=average_cost_basis,
         lump_sum_final_equity=lump_sum_final_equity,
         lump_sum_return_pct=lump_sum_return_pct,

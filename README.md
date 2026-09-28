@@ -97,6 +97,38 @@ Não é garantido que o DCA bata lump sum (normalmente não bate em mercados a
 subir de forma constante) — a vantagem do DCA é reduzir o risco de entrares
 com tudo mesmo antes de uma queda grande, não maximizar o retorno esperado.
 
+### DCA — validação em vários pares/períodos
+
+Tal como a estratégia técnica, um único teste de DCA não prova nada. Usa
+`dca-validate` para ver a consistência em vários pares e períodos:
+
+```bash
+python -m paperbot dca-validate \
+    --symbols BTC/USDT,ETH/USDT,SOL/USDT \
+    --days-list 90,180,365 \
+    --installments 12
+```
+
+Mostra, para cada combinação, o retorno do DCA vs. lump sum, se bateu ou
+não, e o drawdown máximo — o que importa aqui não é "ganhar" em todos os
+testes, mas ver se o drawdown é consistentemente mais controlado.
+
+### DCA — modo live (simulado, sem dinheiro real)
+
+Compra uma parcela fixa a cada N dias, indefinidamente, e guarda o estado
+em disco:
+
+```bash
+python -m paperbot dca-live --symbol BTC/USDT --contribution 100 \
+    --interval-days 7 --check-interval 3600
+```
+
+Isto verifica a cada hora (`--check-interval` em segundos) se já passaram
+`--interval-days` desde a última compra simulada; se sim, "compra" ao preço
+atual. Nunca envia ordens reais. O estado fica em `dca_state.json` (podes
+mudar com `--state-file`), por isso podes parar (`Ctrl+C`) e retomar depois
+sem perder o histórico.
+
 ### Backtest (estratégia técnica)
 
 ```bash
