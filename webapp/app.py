@@ -118,7 +118,10 @@ def risk():
 
 
 def main() -> None:
-    app.run(debug=True, port=5000)
+    # debug=False: isto corre sem consola em segundo plano via Task Scheduler
+    # (ver scripts/setup_windows.ps1); usa --debug para o modo de desenvolvimento.
+    debug = "--debug" in sys.argv
+    app.run(host="127.0.0.1", port=5000, debug=debug)
 
 
 if __name__ == "__main__":

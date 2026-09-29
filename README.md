@@ -211,14 +211,38 @@ Uma página local (não publicada online) com três vistas:
 Em todas, os parâmetros (pares, dias, etc.) são ajustáveis no formulário da
 própria página.
 
-Corre com:
+Corre manualmente com:
 
 ```bash
 python webapp/app.py
 ```
 
 Depois abre `http://127.0.0.1:5000` no browser. Corre só na tua máquina —
-não é um serviço público nem guarda nada permanentemente.
+não é um serviço público nem guarda nada permanentemente. Os dados são
+sempre em tempo real: cada vez que abres uma página, ela vai buscar os
+preços e recalcula os indicadores nesse momento — não há um "refresh diário"
+à espera, nem é preciso.
+
+### Arranque automático no Windows (atalhos no ambiente de trabalho)
+
+Para não teres de abrir o PowerShell todas as vezes:
+
+```powershell
+.\scripts\setup_windows.ps1
+```
+
+Isto:
+- Cria uma tarefa agendada do Windows que arranca o dashboard sozinho
+  sempre que inicias sessão (sem janela de consola visível).
+- Arranca o dashboard imediatamente, sem esperares pelo próximo login.
+- Cria 3 atalhos no ambiente de trabalho: **Crypto - Preços**, **Crypto -
+  Risco**, **Crypto - DCA vs Lump Sum**.
+
+Para desfazer tudo isto (parar a tarefa e remover os atalhos):
+
+```powershell
+.\scripts\remove_windows_setup.ps1
+```
 
 > Esta página **mostra dados de simulações e histórico de mercado**. Não
 > gera recomendações de "onde investir" nem qualquer tipo de sinal de
@@ -246,11 +270,15 @@ paperbot/
   engine.py      # motor de backtest
   dca.py         # simulação de DCA vs lump sum
   validation.py  # buy-and-hold, Sharpe, profit factor
+  risk.py        # volatilidade, pior queda, consistência (históricos)
   cli.py         # interface de linha de comandos
 webapp/
   app.py         # dashboard Flask local
   templates/
   static/
+scripts/
+  setup_windows.ps1         # arranque automático + atalhos no ambiente de trabalho
+  remove_windows_setup.ps1  # desfaz o setup_windows.ps1
 tests/
 ```
 
