@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Risco — crypto-paper-trader{% endblock %}
+{% block content %}
+<h1>Indicadores de risco</h1>
+
+<div class="explainer">
+  <p>
+    <strong>Esta página não te diz "podes meter dinheiro" ou "não podes".</strong>
+    Nenhum indicador, gráfico ou modelo consegue prever se um preço vai subir
+    ou descer nos próximos meses — quem diz que consegue está a enganar-te ou
+    a enganar-se a si próprio.
+  </p>
+  <p>
+    O que esta página mostra são <strong>factos sobre o passado</strong>: o
+    quanto este ativo já oscilou, a pior queda que já teve, e com que
+    frequência teve períodos positivos no intervalo escolhido. Isso ajuda-te
+    a perceber <strong>o risco que estarias a assumir</strong>, não o que vai
+    acontecer a seguir. Um ativo muito volátil pode continuar a subir — ou
+    pode continuar a cair. Os números não escolhem por ti.
+  </p>
+</div>
+
+<form method="get" class="filter-row">
+  <label>Pares
+    <input type="text" name="symbols" value="{{ symbols_param }}">
+  </label>
+  <label>Dias
+    <input type="number" name="days" value="{{ days }}" min="2">
+  </label>
+  <label>Janela (candles)
+    <input type="number" name="window" value="{{ window }}" min="1">
+  </label>
+  <button type="submit">Recalcular</button>
+</form>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Par</th>
+      <th>Volatilidade anualizada</th>
+      <th>Pior queda histórica</th>
+      <th>Janelas positivas</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.symbol }}</td>
+      {% if r.error %}
+        <td colspan="3" class="error">{{ r.error }}</td>
+      {% else %}
+        <td class="tabular">{{ "%.1f"|format(r.volatility_pct) }}%</td>
+        <td class="tabular">{{ "%.1f"|format(r.max_drawdown_pct) }}%</td>
+        <td class="tabular">{{ "%.1f"|format(r.positive_window_pct) }}%</td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="explainer">
+  <h2>Como ler estes números</h2>
+  <ul>
+    <li>
+      <strong>Volatilidade anualizada</strong> — quanto o preço tende a
+      oscilar por ano, com base nas variações diárias do período escolhido.
+      Mais alto = maiores subidas e descidas de curto prazo. Não indica
+      direção, só amplitude.
+    </li>
+    <li>
+      <strong>Pior queda histórica</strong> — a maior queda percentual do
+      pico ao fundo seguinte, dentro do período escolhido. É o pior cenário
+      que já aconteceu nesse intervalo — não um limite do que pode acontecer
+      no futuro; quedas piores já aconteceram fora deste período e podem
+      voltar a acontecer.
+    </li>
+    <li>
+      <strong>Janelas positivas</strong> — de todos os blocos de N candles
+      no período, quantos terminaram com o preço mais alto do que começaram.
+      Mostra a consistência da tendência <em>nesse período específico</em> —
+      não uma probabilidade do que vai acontecer a seguir.
+    </li>
+  </ul>
+  <p class="muted">
+    Combina isto com a página de <a href="{{ url_for('dca') }}">DCA vs Lump
+    Sum</a> e com decisões tuas sobre quanto dinheiro estás realmente
+    disponível a perder — essa parte não há ferramenta nenhuma que a possa
+    tomar por ti.
+  </p>
+</div>
+{% endblock %}

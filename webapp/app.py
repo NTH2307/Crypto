@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from paperbot.data import fetch_latest_price, fetch_ohlcv  # noqa: E402
 from paperbot.dca import DcaConfig, run_dca_backtest  # noqa: E402
+from paperbot.risk import positive_window_pct, price_max_drawdown_pct, price_volatility_pct  # noqa: E402
 
 app = Flask(__name__)
 
@@ -77,6 +78,42 @@ def dca():
         days=days,
         installments=installments,
         cash=cash,
+    )
+
+
+@app.route("/risk")
+def risk():
+    symbols_param = request.args.get("symbols", "BTC/USDT,ETH/USDT,SOL/USDT,BNB/USDT")
+    days = int(request.args.get("days", 365))
+    window = int(request.args.get("window", 7))
+
+    symbols = [s.strip() for s in symbols_param.split(",") if s.strip()]
+    rows = []
+
+    for symbol in symbols:
+        try:
+            ohlcv = fetch_ohlcv(EXCHANGE, symbol, "1d", days)
+            if len(ohlcv) < 2:
+                rows.append({"symbol": symbol, "error": "Dados insuficientes para este periodo."})
+                continue
+            rows.append(
+                {
+                    "symbol": symbol,
+                    "volatility_pct": price_volatility_pct(ohlcv, "1d"),
+                    "max_drawdown_pct": price_max_drawdown_pct(ohlcv),
+                    "positive_window_pct": positive_window_pct(ohlcv, window=window),
+                    "error": None,
+                }
+            )
+        except Exception as exc:
+            rows.append({"symbol": symbol, "error": str(exc)})
+
+    return render_template(
+        "risk.html",
+        rows=rows,
+        symbols_param=symbols_param,
+        days=days,
+        window=window,
     )
 
 

@@ -69,6 +69,17 @@ pip install -r requirements.txt
 
 ## Uso
 
+### Risco (indicadores históricos, não previsões)
+
+```bash
+python -m paperbot risk --symbols BTC/USDT,ETH/USDT,SOL/USDT --days 365
+```
+
+Mostra, por par: volatilidade anualizada, pior queda histórica (peak-to-
+trough) e percentagem de janelas de N candles com retorno positivo, todos
+calculados sobre o período pedido. Servem para avaliares o risco que
+estarias a assumir — não para prever se vai subir ou descer a seguir.
+
 ### DCA (recomendado)
 
 ```bash
@@ -187,14 +198,18 @@ carteira virtual a cada iteração, e guarda o estado em
 
 ## Dashboard web
 
-Uma página local (não publicada online) com duas vistas:
+Uma página local (não publicada online) com três vistas:
 
 - **Preços** (`/`) — preços ao vivo de alguns pares (BTC, ETH, SOL, BNB),
   dados públicos via ccxt.
+- **Risco** (`/risk`) — volatilidade anualizada, pior queda histórica e
+  consistência de tendência por par, no período escolhido. São factos sobre
+  o passado, não previsões — a página explica isso de forma explícita.
 - **DCA vs Lump Sum** (`/dca`) — tabela comparando DCA com lump sum em vários
   pares, mais um gráfico da evolução do valor investido ao longo do tempo.
-  Os parâmetros (pares, dias, parcelas, capital) são ajustáveis no formulário
-  da própria página.
+
+Em todas, os parâmetros (pares, dias, etc.) são ajustáveis no formulário da
+própria página.
 
 Corre com:
 

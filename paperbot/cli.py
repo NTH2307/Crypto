@@ -11,6 +11,7 @@ from .data import fetch_latest_price, fetch_ohlcv
 from .dca import DcaConfig, run_dca_backtest
 from .engine import run_backtest
 from .portfolio import PaperPortfolio
+from .risk import positive_window_pct, price_max_drawdown_pct, price_volatility_pct
 from .strategy import SmaCrossRsiStrategy
 from .validation import buy_and_hold_return_pct, profit_factor, sharpe_ratio
 
@@ -127,6 +128,47 @@ def cmd_dca(args: argparse.Namespace) -> None:
         "Nota: DCA costuma perder para lump sum quando o mercado sobe (investir tudo logo "
         "aproveita mais a subida), mas reduz o risco de investires tudo mesmo antes de uma "
         "queda. E uma decisao sobre gestao de risco, nao uma tentativa de bater o mercado."
+    )
+
+
+def cmd_risk(args: argparse.Namespace) -> None:
+    symbols = [s.strip() for s in args.symbols.split(",") if s.strip()]
+
+    rows = []
+    for symbol in symbols:
+        ohlcv = fetch_ohlcv(args.exchange, symbol, args.timeframe, args.days)
+        if len(ohlcv) < 2:
+            print(f"Sem dados suficientes para {symbol}, a saltar.")
+            continue
+        rows.append(
+            {
+                "symbol": symbol,
+                "volatility_pct": price_volatility_pct(ohlcv, args.timeframe),
+                "max_drawdown_pct": price_max_drawdown_pct(ohlcv),
+                "positive_window_pct": positive_window_pct(ohlcv, window=args.window),
+            }
+        )
+
+    if not rows:
+        print("Nenhum resultado obtido -- verifica os simbolos e o timeframe.")
+        return
+
+    header = f"{'Par':<10}{'Volatilidade':>14}{'PiorQueda':>12}{'JanelasPos':>12}"
+    print(header)
+    print("-" * len(header))
+    for r in rows:
+        print(
+            f"{r['symbol']:<10}{r['volatility_pct']:>13.2f}%"
+            f"{r['max_drawdown_pct']:>11.2f}%{r['positive_window_pct']:>11.2f}%"
+        )
+    print("-" * len(header))
+    print(
+        f"Periodo: {args.days} dias. 'JanelasPos' = % de janelas de {args.window} candles "
+        "com retorno positivo neste periodo.\n"
+        "Aviso: estes numeros descrevem o passado, nao preveem o futuro. Uma "
+        "volatilidade alta ou uma queda historica grande nao dizem o que vai "
+        "acontecer a seguir -- dizem que tipo de oscilacoes ja aconteceram, "
+        "para ajudares a avaliar o risco que estarias a assumir."
     )
 
 
@@ -344,6 +386,20 @@ def build_parser() -> argparse.ArgumentParser:
         "--installments", type=int, default=12, help="Numero de parcelas em que o capital e dividido."
     )
     dca_parser.set_defaults(func=cmd_dca)
+
+    risk_parser = sub.add_parser(
+        "risk",
+        parents=[market_common],
+        help="Mostra indicadores de risco historicos (volatilidade, pior queda, consistencia).",
+    )
+    risk_parser.add_argument(
+        "--symbols", default="BTC/USDT,ETH/USDT,SOL/USDT", help="Lista de pares separados por virgula."
+    )
+    risk_parser.add_argument("--days", type=int, default=365)
+    risk_parser.add_argument(
+        "--window", type=int, default=7, help="Tamanho da janela (em candles) para a consistencia."
+    )
+    risk_parser.set_defaults(func=cmd_risk)
 
     dca_validate_parser = sub.add_parser(
         "dca-validate",
