@@ -1,7 +1,12 @@
 import pandas as pd
 import pytest
 
-from paperbot.risk import positive_window_pct, price_max_drawdown_pct, price_volatility_pct
+from paperbot.risk import (
+    classify_risk,
+    positive_window_pct,
+    price_max_drawdown_pct,
+    price_volatility_pct,
+)
 
 
 def _make_ohlcv(closes):
@@ -44,3 +49,28 @@ def test_positive_window_pct_mixed():
 def test_positive_window_pct_not_enough_data():
     ohlcv = _make_ohlcv([100.0, 105.0])
     assert positive_window_pct(ohlcv, window=7) == 0.0
+
+
+def test_classify_risk_baixo():
+    assert classify_risk(volatility_pct=20.0, max_drawdown_pct=-15.0) == "baixo"
+
+
+def test_classify_risk_medio_by_volatility():
+    assert classify_risk(volatility_pct=55.0, max_drawdown_pct=-10.0) == "medio"
+
+
+def test_classify_risk_medio_by_drawdown():
+    assert classify_risk(volatility_pct=20.0, max_drawdown_pct=-45.0) == "medio"
+
+
+def test_classify_risk_alto_by_volatility():
+    assert classify_risk(volatility_pct=90.0, max_drawdown_pct=-10.0) == "alto"
+
+
+def test_classify_risk_alto_by_drawdown():
+    assert classify_risk(volatility_pct=20.0, max_drawdown_pct=-65.0) == "alto"
+
+
+def test_classify_risk_uses_the_worse_of_the_two():
+    # Volatilidade baixa mas queda historica enorme -> continua alto.
+    assert classify_risk(volatility_pct=10.0, max_drawdown_pct=-90.0) == "alto"

@@ -1,23 +1,42 @@
 {% extends "base.html" %}
 {% block title %}Risco — crypto-paper-trader{% endblock %}
 {% block content %}
-<h1>Indicadores de risco</h1>
+<h1>Risco por moeda</h1>
 
 <div class="explainer">
   <p>
-    <strong>Esta página não te diz "podes meter dinheiro" ou "não podes".</strong>
-    Nenhum indicador, gráfico ou modelo consegue prever se um preço vai subir
-    ou descer nos próximos meses — quem diz que consegue está a enganar-te ou
-    a enganar-se a si próprio.
+    <strong>Isto não te diz "podes meter dinheiro" ou "não podes".</strong>
+    Nenhum indicador consegue prever se um preço vai subir ou descer — quem
+    diz que consegue está a enganar-te. O que vês abaixo é <strong>o quanto
+    cada moeda já oscilou no passado</strong>, para te ajudar a avaliar o
+    risco que estarias a assumir. Uma moeda "risco baixo" pode continuar a
+    cair; uma "risco alto" pode continuar a subir. Os números não decidem
+    por ti.
   </p>
-  <p>
-    O que esta página mostra são <strong>factos sobre o passado</strong>: o
-    quanto este ativo já oscilou, a pior queda que já teve, e com que
-    frequência teve períodos positivos no intervalo escolhido. Isso ajuda-te
-    a perceber <strong>o risco que estarias a assumir</strong>, não o que vai
-    acontecer a seguir. Um ativo muito volátil pode continuar a subir — ou
-    pode continuar a cair. Os números não escolhem por ti.
-  </p>
+</div>
+
+<div class="risk-cards">
+  {% for r in rows %}
+  <div class="risk-card {% if not r.error %}risk-{{ r.risk_level }}{% endif %}">
+    <div class="risk-card-symbol">{{ r.symbol }}</div>
+    {% if r.error %}
+      <div class="risk-card-error">{{ r.error }}</div>
+    {% else %}
+      <div class="risk-card-badge">
+        {% if r.risk_level == "baixo" %}🟢{% elif r.risk_level == "medio" %}🟡{% else %}🔴{% endif %}
+        <span class="risk-card-label">
+          {% if r.risk_level == "baixo" %}Risco histórico baixo
+          {% elif r.risk_level == "medio" %}Risco histórico médio
+          {% else %}Risco histórico alto{% endif %}
+        </span>
+      </div>
+      <div class="risk-card-stats">
+        <span>Volatilidade: <strong>{{ "%.0f"|format(r.volatility_pct) }}%</strong></span>
+        <span>Pior queda: <strong>{{ "%.0f"|format(r.max_drawdown_pct) }}%</strong></span>
+      </div>
+    {% endif %}
+  </div>
+  {% endfor %}
 </div>
 
 <form method="get" class="filter-row">
@@ -33,6 +52,7 @@
   <button type="submit">Recalcular</button>
 </form>
 
+<h2>Detalhe por par</h2>
 <table class="data-table">
   <thead>
     <tr>
@@ -62,23 +82,24 @@
   <h2>Como ler estes números</h2>
   <ul>
     <li>
+      <strong>Risco baixo/médio/alto</strong> — classificação fixa a partir
+      da volatilidade e da pior queda histórica no período escolhido. Usa
+      sempre o pior dos dois indicadores, para não subestimar o risco.
+    </li>
+    <li>
       <strong>Volatilidade anualizada</strong> — quanto o preço tende a
       oscilar por ano, com base nas variações diárias do período escolhido.
-      Mais alto = maiores subidas e descidas de curto prazo. Não indica
-      direção, só amplitude.
+      Não indica direção, só amplitude.
     </li>
     <li>
       <strong>Pior queda histórica</strong> — a maior queda percentual do
-      pico ao fundo seguinte, dentro do período escolhido. É o pior cenário
-      que já aconteceu nesse intervalo — não um limite do que pode acontecer
-      no futuro; quedas piores já aconteceram fora deste período e podem
-      voltar a acontecer.
+      pico ao fundo seguinte, dentro do período escolhido. Quedas piores já
+      aconteceram fora deste período e podem voltar a acontecer.
     </li>
     <li>
-      <strong>Janelas positivas</strong> — de todos os blocos de N candles
-      no período, quantos terminaram com o preço mais alto do que começaram.
-      Mostra a consistência da tendência <em>nesse período específico</em> —
-      não uma probabilidade do que vai acontecer a seguir.
+      <strong>Janelas positivas</strong> — percentagem de blocos de N
+      candles que terminaram acima de onde começaram, nesse período
+      específico — não uma probabilidade do que vai acontecer a seguir.
     </li>
   </ul>
   <p class="muted">

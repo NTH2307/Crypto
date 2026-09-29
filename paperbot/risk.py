@@ -50,3 +50,27 @@ def positive_window_pct(ohlcv: pd.DataFrame, window: int = 7) -> float:
     if total == 0:
         return 0.0
     return positive / total * 100
+
+
+# Limiares fixos sobre volatilidade anualizada e pior queda historica.
+# Sao uma classificacao do quanto o preco JA oscilou, nao uma previsao do que
+# vai fazer a seguir -- um ativo "baixo risco" aqui pode continuar a cair, e
+# um "alto risco" pode continuar a subir.
+_VOLATILITY_HIGH = 80.0
+_VOLATILITY_MEDIUM = 50.0
+_DRAWDOWN_HIGH = 60.0
+_DRAWDOWN_MEDIUM = 40.0
+
+
+def classify_risk(volatility_pct: float, max_drawdown_pct: float) -> str:
+    """Classifica o risco historico como 'baixo', 'medio' ou 'alto'.
+
+    Usa o pior dos dois indicadores (volatilidade, pior queda) -- nunca o
+    melhor -- para nao subestimar o risco quando um deles e mau.
+    """
+    abs_drawdown = abs(max_drawdown_pct)
+    if volatility_pct >= _VOLATILITY_HIGH or abs_drawdown >= _DRAWDOWN_HIGH:
+        return "alto"
+    if volatility_pct >= _VOLATILITY_MEDIUM or abs_drawdown >= _DRAWDOWN_MEDIUM:
+        return "medio"
+    return "baixo"

@@ -9,7 +9,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from paperbot.data import fetch_latest_price, fetch_ohlcv  # noqa: E402
 from paperbot.dca import DcaConfig, run_dca_backtest  # noqa: E402
-from paperbot.risk import positive_window_pct, price_max_drawdown_pct, price_volatility_pct  # noqa: E402
+from paperbot.risk import (  # noqa: E402
+    classify_risk,
+    positive_window_pct,
+    price_max_drawdown_pct,
+    price_volatility_pct,
+)
 
 app = Flask(__name__)
 
@@ -96,12 +101,15 @@ def risk():
             if len(ohlcv) < 2:
                 rows.append({"symbol": symbol, "error": "Dados insuficientes para este periodo."})
                 continue
+            volatility_pct = price_volatility_pct(ohlcv, "1d")
+            max_drawdown_pct = price_max_drawdown_pct(ohlcv)
             rows.append(
                 {
                     "symbol": symbol,
-                    "volatility_pct": price_volatility_pct(ohlcv, "1d"),
-                    "max_drawdown_pct": price_max_drawdown_pct(ohlcv),
+                    "volatility_pct": volatility_pct,
+                    "max_drawdown_pct": max_drawdown_pct,
                     "positive_window_pct": positive_window_pct(ohlcv, window=window),
+                    "risk_level": classify_risk(volatility_pct, max_drawdown_pct),
                     "error": None,
                 }
             )

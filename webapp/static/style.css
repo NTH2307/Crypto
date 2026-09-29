@@ -10,6 +10,8 @@
   --border:         rgba(11, 11, 11, 0.10);
   --series-1:       #2a78d6;
   --series-2:       #eb6834;
+  --status-good:    #0ca30c;
+  --status-warning: #fab219;
   --status-critical:#d03b3b;
 }
 
@@ -26,6 +28,8 @@
     --border:         rgba(255, 255, 255, 0.10);
     --series-1:       #3987e5;
     --series-2:       #d95926;
+    --status-good:    #0ca30c;
+    --status-warning: #fab219;
     --status-critical:#e66767;
   }
 }
@@ -217,4 +221,69 @@ h2 {
 
 .explainer strong {
   color: var(--text-primary);
+}
+
+.risk-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+
+.risk-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--baseline);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.risk-card.risk-baixo {
+  border-left-color: var(--status-good);
+}
+
+.risk-card.risk-medio {
+  border-left-color: var(--status-warning);
+}
+
+.risk-card.risk-alto {
+  border-left-color: var(--status-critical);
+}
+
+.risk-card-symbol {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.risk-card-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+
+.risk-card-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.risk-card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.risk-card-stats strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.risk-card-error {
+  color: var(--status-critical);
+  font-size: 0.9rem;
 }
