@@ -1,16 +1,24 @@
-# Desfaz o que scripts/setup_windows.ps1 configurou: remove a tarefa agendada
-# e os atalhos do ambiente de trabalho.
+# Desfaz o que scripts/setup_windows.ps1 configurou: remove o atalho de
+# arranque automatico e os atalhos do ambiente de trabalho, e termina o
+# dashboard se estiver a correr.
 #
 # Uso: .\scripts\remove_windows_setup.ps1
 
 $ErrorActionPreference = "Stop"
 
 $Desktop = [Environment]::GetFolderPath("Desktop")
-$TaskName = "CryptoPaperTraderDashboard"
+$StartupFolder = [Environment]::GetFolderPath("Startup")
+$ShortcutPath = Join-Path $StartupFolder "CryptoPaperTraderDashboard.lnk"
 
-Write-Host "A parar e remover a tarefa agendada '$TaskName'..."
+# Compatibilidade com uma instalacao antiga feita via Tarefa Agendada.
+$TaskName = "CryptoPaperTraderDashboard"
 Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+
+if (Test-Path $ShortcutPath) {
+    Remove-Item $ShortcutPath -Force
+    Write-Host "Atalho de arranque removido: $ShortcutPath"
+}
 
 Write-Host "A terminar qualquer processo do dashboard ainda a correr..."
 Get-CimInstance Win32_Process -Filter "Name = 'pythonw.exe'" |

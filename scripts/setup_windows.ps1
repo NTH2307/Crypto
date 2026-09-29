@@ -1,6 +1,9 @@
 # Configura o dashboard do crypto-paper-trader para arrancar sozinho quando
 # inicias sessao no Windows, e cria atalhos no ambiente de trabalho.
 #
+# Usa a pasta de Arranque do Windows (shell:startup) em vez de uma tarefa
+# agendada -- nao precisa de privilegios de Administrador.
+#
 # Uso: corre este script a partir da pasta do projeto (ou de qualquer lado):
 #   .\scripts\setup_windows.ps1
 #
@@ -12,24 +15,28 @@ $ProjectDir = Split-Path -Parent $PSScriptRoot
 $VenvPythonW = Join-Path $ProjectDir ".venv\Scripts\pythonw.exe"
 $AppScript = Join-Path $ProjectDir "webapp\app.py"
 $Desktop = [Environment]::GetFolderPath("Desktop")
-$TaskName = "CryptoPaperTraderDashboard"
+$StartupFolder = [Environment]::GetFolderPath("Startup")
+$ShortcutName = "CryptoPaperTraderDashboard.lnk"
+$ShortcutPath = Join-Path $StartupFolder $ShortcutName
 
 if (-not (Test-Path $VenvPythonW)) {
     Write-Error "Nao encontrei $VenvPythonW`n`nCria o ambiente virtual e instala as dependencias primeiro:`n  python -m venv .venv`n  .venv\Scripts\Activate.ps1`n  pip install -r requirements.txt"
 }
 
-Write-Host "A criar tarefa agendada '$TaskName' (arranca o dashboard ao iniciar sessao)..."
+Write-Host "A criar atalho de arranque automatico em $StartupFolder ..."
 
-$Action = New-ScheduledTaskAction -Execute $VenvPythonW -Argument "`"$AppScript`"" -WorkingDirectory $ProjectDir
-$Trigger = New-ScheduledTaskTrigger -AtLogOn
-$Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+$WshShell = New-Object -ComObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+$Shortcut.TargetPath = $VenvPythonW
+$Shortcut.Arguments = "`"$AppScript`""
+$Shortcut.WorkingDirectory = $ProjectDir
+$Shortcut.WindowStyle = 7  # minimizado
+$Shortcut.Save()
 
-Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
-Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings `
-    -Description "Arranca o dashboard local do crypto-paper-trader (webapp/app.py) ao iniciar sessao." | Out-Null
+Write-Host "Atalho de arranque criado: $ShortcutPath"
+Write-Host "A arrancar o dashboard agora, sem esperar pelo proximo login..."
 
-Write-Host "Tarefa criada. A arrancar o dashboard agora, sem esperar pelo proximo login..."
-Start-ScheduledTask -TaskName $TaskName
+Start-Process -FilePath $VenvPythonW -ArgumentList "`"$AppScript`"" -WorkingDirectory $ProjectDir
 Start-Sleep -Seconds 2
 
 function New-UrlShortcut {
@@ -48,9 +55,10 @@ Write-Host ""
 Write-Host "Pronto:"
 Write-Host "  - 3 atalhos no ambiente de trabalho (Precos, Risco, DCA vs Lump Sum)"
 Write-Host "  - O dashboard arranca sozinho sempre que inicias sessao no Windows"
+Write-Host "    (via $ShortcutName na pasta de Arranque)"
 Write-Host "  - Os dados sao sempre em tempo real -- nao ha um 'refresh diario' a"
 Write-Host "    esperar: cada vez que abres um atalho, a pagina vai buscar os"
 Write-Host "    precos e calcula os indicadores nesse momento."
 Write-Host ""
-Write-Host "Para parar o dashboard agora: Stop-ScheduledTask -TaskName '$TaskName'"
-Write-Host "Para desfazer tudo (tarefa + atalhos): .\scripts\remove_windows_setup.ps1"
+Write-Host "Para parar o dashboard agora, abre o Gestor de Tarefas e termina 'pythonw.exe'."
+Write-Host "Para desfazer tudo (atalho de arranque + atalhos): .\scripts\remove_windows_setup.ps1"

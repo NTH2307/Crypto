@@ -232,13 +232,14 @@ Para não teres de abrir o PowerShell todas as vezes:
 ```
 
 Isto:
-- Cria uma tarefa agendada do Windows que arranca o dashboard sozinho
-  sempre que inicias sessão (sem janela de consola visível).
+- Cria um atalho na pasta de Arranque do Windows (`shell:startup`) que
+  arranca o dashboard sozinho sempre que inicias sessão (sem janela de
+  consola visível, e sem precisar de privilégios de Administrador).
 - Arranca o dashboard imediatamente, sem esperares pelo próximo login.
 - Cria 3 atalhos no ambiente de trabalho: **Crypto - Preços**, **Crypto -
   Risco**, **Crypto - DCA vs Lump Sum**.
 
-Para desfazer tudo isto (parar a tarefa e remover os atalhos):
+Para desfazer tudo isto (remover o arranque automático e os atalhos):
 
 ```powershell
 .\scripts\remove_windows_setup.ps1
