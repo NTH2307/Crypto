@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}DCA vs Lump Sum — crypto-paper-trader{% endblock %}
+{% block title %}DCA vs Investimento Único — Simulador Cripto{% endblock %}
 {% block content %}
-<h1>DCA vs Lump Sum</h1>
+<h1>DCA vs Investimento Único</h1>
 <p class="muted">
   Compara investir em parcelas iguais ao longo do tempo (DCA) com investir tudo
-  de uma vez no início (lump sum). Não esperes que o DCA "ganhe" sempre — o que
-  importa é a consistência entre vários pares/períodos, não um único resultado.
+  de uma vez no início (investimento único). Não esperes que o DCA "ganhe"
+  sempre — o que importa é a consistência entre vários pares/períodos, não um
+  único resultado.
 </p>
 
 <form method="get" class="filter-row">
@@ -29,9 +30,9 @@
     <tr>
       <th>Par</th>
       <th>DCA</th>
-      <th>Lump sum</th>
-      <th>Bate LS</th>
-      <th>Max drawdown</th>
+      <th>Investimento único</th>
+      <th>Bate IU</th>
+      <th>Queda máxima</th>
     </tr>
   </thead>
   <tbody>
@@ -57,7 +58,7 @@
   <canvas
     id="equity-chart"
     role="img"
-    aria-label="Gráfico de linhas comparando o valor da carteira DCA com lump sum ao longo do tempo para {{ chart_data.symbol }}"
+    aria-label="Gráfico de linhas comparando o valor da carteira DCA com investimento único ao longo do tempo para {{ chart_data.symbol }}"
   ></canvas>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
@@ -83,7 +84,7 @@
           tension: 0.15,
         },
         {
-          label: 'Lump sum',
+          label: 'Investimento único',
           data: lumpSumValues,
           borderColor: '#eb6834',
           backgroundColor: 'rgba(235, 104, 52, 0.10)',
@@ -111,9 +112,9 @@
 {% endif %}
 
 <p class="muted">
-  Baseado no que já validámos: a estratégia de DCA não bate sempre lump sum —
-  reduz o risco de investires tudo mesmo antes de uma queda, não maximiza o
-  retorno esperado. Usa a página de <a href="{{ url_for('dca') }}">DCA</a> com
-  vários pares e períodos antes de tirares conclusões.
+  Baseado no que já validámos: a estratégia de DCA não bate sempre o
+  investimento único — reduz o risco de investires tudo mesmo antes de uma
+  queda, não maximiza o retorno esperado. Usa esta página com vários pares e
+  períodos antes de tirares conclusões.
 </p>
 {% endblock %}

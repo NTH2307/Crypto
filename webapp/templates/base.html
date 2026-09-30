@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}crypto-paper-trader{% endblock %}</title>
+  <title>{% block title %}Simulador Cripto{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <span class="brand">crypto-paper-trader</span>
+      <span class="brand">Simulador Cripto</span>
       <nav>
         <a href="{{ url_for('index') }}">Preços</a>
         <a href="{{ url_for('risk') }}">Risco</a>
-        <a href="{{ url_for('dca') }}">DCA vs Lump Sum</a>
+        <a href="{{ url_for('dca') }}">DCA vs Investimento Único</a>
       </nav>
     </div>
   </header>
